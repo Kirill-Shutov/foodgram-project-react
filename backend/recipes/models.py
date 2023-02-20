@@ -58,7 +58,7 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    """Сам рецепт со всеми составляющими. """
+    """Сам рецепт со всеми составляющими."""
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингредиенты',
