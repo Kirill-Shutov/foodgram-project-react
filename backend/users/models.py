@@ -3,7 +3,7 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    """ Кастомная модель пользователя. """
+    """Кастомная модель пользователя."""
     first_name = models.TextField(
         'Имя',
         blank=False,

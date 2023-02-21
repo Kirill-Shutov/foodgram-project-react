@@ -1,21 +1,13 @@
-# from django.contrib.auth.views import LogoutView, LoginView
-# from django.urls import include, path
-# from rest_framework.routers import DefaultRouter
+from django.urls import include, path
 
-# app_name = 'users'
+from rest_framework.routers import DefaultRouter
 
-# router = DefaultRouter()
+# from .views import UserViewSet
 
-# urlpatterns = [
-#     path('', include(router.urls)),
-#     path(
-#         'login/',
-#         LoginView.as_view(template_name='users/login.html'),
-#         name='login'
-#     ),
-#     path(
-#       'logout/',
-#       LogoutView.as_view(template_name='users/logged_out.html'),
-#       name='logout'
-#     ),
-# ]
+router = DefaultRouter()
+# router.register(r'users', UserViewSet, basename='users')
+
+urlpatterns = [
+    path('', include(router.urls)),
+    path('auth/', include('djoser.urls.authtoken')),
+]

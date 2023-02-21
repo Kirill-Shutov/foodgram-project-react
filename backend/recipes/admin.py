@@ -19,7 +19,6 @@ class IngredientAdmin(admin.ModelAdmin):
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
-    # list_display = ('ingredients', 'author', 'tags', 'image', 'name', 'text', 'cooking_time')
     list_display = ('author', 'name',)
     search_fields = ('name',)
     list_filter = ('author', 'name', 'tags')
