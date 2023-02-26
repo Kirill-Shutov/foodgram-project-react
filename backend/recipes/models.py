@@ -47,7 +47,7 @@ class Ingredient(models.Model):
         verbose_name_plural = 'Ингредиенты'
 
     def __str__(self):
-        return f'{self.name} ({self.measurement_unit}) - {self.amount}'
+        return f'{self.name} ({self.measurement_unit})'
 
 
 class Recipe(models.Model):
@@ -55,13 +55,13 @@ class Recipe(models.Model):
     ingredients = models.ManyToManyField(
         Ingredient,
         verbose_name='Ингредиенты',
-        # related_name='recipes',
-        through='recipes.AmountIngredient'
+        related_name='recipes',
+        through='AmountIngredient'
     )
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
         verbose_name='Автор рецепта',
-        related_name='recipe'
+        related_name='recipes'
     )
     tags = models.ManyToManyField(
         Tag, verbose_name='Тэги рецепта',
@@ -103,18 +103,16 @@ class AmountIngredient(models.Model):
     recipe = models.ForeignKey(
         Recipe, on_delete=models.CASCADE,
         verbose_name='В каких рецептах',
-        # related_name='ingredient'
-        related_name='recipe'
+        related_name='amounts'
     )
     ingredients = models.ForeignKey(
         Ingredient, on_delete=models.CASCADE,
         verbose_name='Связанные ингредиенты',
-        related_name='ingredient'
+        related_name='amounts'
     )
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
-        # related_name='amounts',
-        default=0,
+        default=0, null=True, blank=True,
         validators=[MinValueValidator(
             1, message='Минимальное количество 1!'
             )
@@ -138,8 +136,8 @@ class Subscribe(models.Model):
     """Подписка на авторов рецепта."""
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
-        related_name='follower',
-        verbose_name='Подписчик'
+        verbose_name='Подписчик',
+        related_name='follower'
     )
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
@@ -166,7 +164,7 @@ class FavoriteRecipe(models.Model):
     """Добавление рецептов в избранное."""
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
-        related_name='favorite_recipe',
+        related_name='favorite_recipes',
         verbose_name='Пользователь'
     )
     recipe = models.ForeignKey(
