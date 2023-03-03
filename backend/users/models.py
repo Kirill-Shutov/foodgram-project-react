@@ -20,11 +20,13 @@ class CustomUser(AbstractUser):
         'Адрес почты',
         blank=False,
         unique=True,
+        max_length=254,
         help_text='Введите почту'
     )
     username = models.CharField(
         'Логин',
         blank=False,
+        unique=True,
         max_length=150,
         help_text='Придумайте логин'
     )
