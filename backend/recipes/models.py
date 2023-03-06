@@ -137,12 +137,12 @@ class Subscribe(models.Model):
     user = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
         verbose_name='Подписчик',
-        related_name='follower'
+        related_name='subscription_on'
     )
     author = models.ForeignKey(
         CustomUser, on_delete=models.CASCADE,
         verbose_name='Автор рецепта',
-        related_name='following'
+        related_name='subscriber'
     )
 
     class Meta:
