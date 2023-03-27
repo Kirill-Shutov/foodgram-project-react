@@ -1,28 +1,33 @@
+from django.db.models import Sum, F
 from django.http.response import HttpResponse
-from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django_filters.rest_framework import DjangoFilterBackend
 
-import django_filters
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.pdfgen import canvas
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.generics import get_object_or_404
-from rest_framework.permissions import AllowAny, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+from rest_framework.permissions import (AllowAny, SAFE_METHODS,
+                                        IsAuthenticated)
 from users.permissions import CurrentUserOrAdmin, GetPost
 
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+
+from rest_framework.response import Response
+
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe, AmountIngredient,
+                            ShoppingCart, Tag)
+
 from .filters import RecipeFilter
-from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredient,
-                     ShoppingCart, Tag)
-from .paginators import PageNumberPaginatorModified
-from .serializers import (FavouriteSerializer, IngredientSerializer,
-                          RecipeReadSerializer, RecipeWriteSerializer,
-                          TagSerializer)
+from .pagination import SixItemPagination
+
+from .serializers import (
+    IngredientSerializer,
+    CreateRecipeSerializer,
+    RecipeSerializer,
+    TagSerializer,
+    FavoriteSerializer,
+)
 
 
-class TagViewSet(ReadOnlyModelViewSet):
+class TagViewSet(viewsets.ReadOnlyModelViewSet):
     """Получение списка тегов."""
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
@@ -30,26 +35,21 @@ class TagViewSet(ReadOnlyModelViewSet):
     pagination_class = None
 
 
-class IngredientViewSet(ReadOnlyModelViewSet):
+class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     """Получение списка ингредиентов."""
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = [AllowAny]
     pagination_class = None
 
-    # def get_queryset(self):
-    #     query = self.request.GET.get('name')
-    #     return Ingredient.objects.filter(name__istartswith=query.lower())
-
 
 class RecipeViewSet(viewsets.ModelViewSet):
     """Все действия с рецептами."""
-
     queryset = Recipe.objects.all()
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
-    pagination_class = Pagination
-    permission_classes = (IsAuthorOrReadOnly,)
+    pagination_class = SixItemPagination
+    permission_classes = [GetPost, CurrentUserOrAdmin]
 
     def update(self, request, *args, **kwargs):
         if kwargs['partial'] is False:
@@ -59,15 +59,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.request.method in SAFE_METHODS:
             return RecipeSerializer
-        return RecipeCreateSerializer
+        return CreateRecipeSerializer
 
     def add_to(self, model, user, pk):
         if model.objects.filter(user=user, recipe__id=pk).exists():
-            return Response({'errors': 'Рецепт уже был добавлен.'},
+            return Response({'errors': 'Рецепт уже добавлен.'},
                             status=status.HTTP_400_BAD_REQUEST)
         recipe = get_object_or_404(Recipe, id=pk)
         model.objects.create(user=user, recipe=recipe)
-        serializer = RecipeFieldSerializer(recipe)
+        serializer = FavoriteSerializer(recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_from(self, model, user, pk):
@@ -76,7 +76,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
             obj.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(
-            {'errors': 'Рецепт уже был удален.'},
+            {'errors': 'Рецепт уже удален.'},
             status=status.HTTP_404_NOT_FOUND
         )
 
@@ -101,10 +101,10 @@ class RecipeViewSet(viewsets.ModelViewSet):
             )
 
         if request.method == 'POST':
-            return self.add_to(Favorite, request.user, pk=recipe_id)
+            return self.add_to(FavoriteRecipe, request.user, pk=recipe_id)
 
         if request.method == 'DELETE':
-            return self.delete_from(Favorite, request.user, recipe_id)
+            return self.delete_from(FavoriteRecipe, request.user, recipe_id)
         return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
 
     @action(
@@ -142,7 +142,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         """Скачивание ингредиентов из списка покупок."""
         ingredients = (
-            RecipeIngredient.objects
+            AmountIngredient.objects
             .filter(recipe__favorite_shops__user=request.user)
             .values('ingredient__name', 'ingredient__measurement_unit')
             .annotate(amount=Sum(F('amount')))
