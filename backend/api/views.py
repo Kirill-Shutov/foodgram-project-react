@@ -12,8 +12,8 @@ from rest_framework.decorators import action
 
 from rest_framework.response import Response
 
-from recipes.models import (FavoriteRecipe, Ingredient, Recipe, AmountIngredient,
-                            ShoppingCart, Tag)
+from recipes.models import (FavoriteRecipe, Ingredient, Recipe,
+                            AmountIngredient, ShoppingCart, Tag)
 
 from .filters import RecipeFilter
 from .pagination import SixItemPagination

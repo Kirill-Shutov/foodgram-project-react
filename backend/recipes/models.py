@@ -148,7 +148,6 @@ class Subscribe(models.Model):
     class Meta:
         verbose_name = 'Подписка'
         verbose_name_plural = 'Подписки'
-        # ordering = ['-pub_date']
         constraints = [
             models.UniqueConstraint(
                 fields=['user', 'author'],
@@ -157,7 +156,7 @@ class Subscribe(models.Model):
         ]
 
     def __str__(self):
-        return f'Пользователь {self.user.username} подписался на {self.author.username}'
+        return f'{self.user.username} подписался на {self.author.username}'
 
 
 class FavoriteRecipe(models.Model):

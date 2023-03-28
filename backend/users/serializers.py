@@ -20,7 +20,7 @@ class UserSerializer(serializers.ModelSerializer):
         if request is None or request.user.is_anonymous:
             return False
         return Subscribe.objects.filter(user=request.user,
-                                           author=obj).exists()
+                                        author=obj).exists()
 
 
 class CustomUserCreateSerializer(UserCreateSerializer):
