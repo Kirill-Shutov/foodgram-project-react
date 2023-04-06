@@ -1,4 +1,4 @@
-from django.core.validators import MinValueValidator
+from django.core.validators import MinValueValidator, MaxValueValidator
 from django.db import models
 
 from users.models import CustomUser
@@ -25,6 +25,7 @@ class Tag(models.Model):
     class Meta:
         verbose_name = 'Тег'
         verbose_name_plural = 'Теги'
+        ordering = ('slug',)
 
     def __str__(self):
         return f'{self.name[:20]}'
@@ -46,6 +47,7 @@ class Ingredient(models.Model):
     class Meta:
         verbose_name = 'Ингредиент'
         verbose_name_plural = 'Ингредиенты'
+        ordering = ('name',)
 
     def __str__(self):
         return f'{self.name} ({self.measurement_unit})'
@@ -80,7 +82,15 @@ class Recipe(models.Model):
         verbose_name='Описание блюда'
     )
     cooking_time = models.PositiveIntegerField(
-        verbose_name='Время приготовления (в минутах)'
+        verbose_name='Время приготовления (в минутах)',
+        validators=(
+            MinValueValidator(
+                1, message='Уже все готово!'
+            ),
+            MaxValueValidator(
+                300, message='Кажется все сгорит!'
+            ),
+        ),
     )
 
     class Meta:
@@ -92,6 +102,7 @@ class Recipe(models.Model):
                 name='уникальный для автора'
             )
         ]
+        ordering = ('name',)
 
     def __str__(self):
         return f'{self.name[:20]}, {self.author.username}'
@@ -114,10 +125,14 @@ class AmountIngredient(models.Model):
     amount = models.PositiveSmallIntegerField(
         verbose_name='Количество',
         default=0, null=True, blank=True,
-        validators=[MinValueValidator(
-            1, message='Минимальное количество 1!'
-            )
-        ]
+        validators=(
+            MinValueValidator(
+                1, message='Минимальное количество 1!'
+            ),
+            MaxValueValidator(
+                30, message='Слишком много, проверь!'
+            ),
+        ),
     )
 
     class Meta:
@@ -128,6 +143,7 @@ class AmountIngredient(models.Model):
             name='Избранные рецепты'
             )
         ]
+        ordering = ('recipe',)
 
     def __str__(self):
         return f'{self.ingredients} {self.amount}'
@@ -155,6 +171,7 @@ class Subscribe(models.Model):
                 name='уникальная подписка'
             )
         ]
+        ordering = ('author',)
 
     def __str__(self):
         return f'{self.user.username} подписался на {self.author.username}'
@@ -181,6 +198,7 @@ class FavoriteRecipe(models.Model):
             name='уникальный избранный автор'
             )
         ]
+        ordering = ('recipe',)
 
     def __str__(self):
         return f'Пользователь {self.user} добавил {self.recipe} в избранные.'
@@ -205,6 +223,8 @@ class ShoppingCart(models.Model):
             name='recipe_unique'
             )
         ]
+        ordering = ('recipe',)
+        
 
     def __str__(self):
         return f'{self.user} - {self.recipe}'
