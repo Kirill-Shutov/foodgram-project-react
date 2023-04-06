@@ -169,32 +169,45 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
     def validate(self, data):
         """Проверка количества ингредиентов и уникальности."""
         ingredients = self.initial_data.get('ingredients')
-        list = []
-        for i in ingredients:
-            amount = i['amount']
+        # ingredients = data.get('ingredients')
+        ingredients_set = set()
+        for ingredient in ingredients:
+            amount = ingredient['amount']
             if int(amount) < 1:
                 raise serializers.ValidationError({
                    'amount': 'Количество ингредиента должно быть больше 0!'
                 })
-            if i['id'] in list:
+            if int(amount) > 30:
+                raise serializers.ValidationError({
+                   'amount': 'Количество не должно быть больше 30!'
+                })
+            identifier = ingredient.get('id')
+            if identifier['id'] in ingredients_set:
                 raise serializers.ValidationError({
                    'ingredient': 'Ингредиенты должны быть уникальными!'
                 })
-            list.append(i['id'])
+            ingredients_set.add(identifier)
         return data
 
     def create_ingredients(self, ingredients, recipe):
         """Создание ингредиентов."""
-        for i in ingredients:
-            ingredient = Ingredient.objects.get(id=i['id'])
-            AmountIngredient.objects.create(
-                ingredient=ingredient, recipe=recipe, amount=i['amount']
-            )
+        AmountIngredient.objects.bulk_create(
+            [AmountIngredient(
+                ingredient=Ingredient.objects.get(id=ingredient['id']),
+                recipe=recipe,
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
 
     def create_tags(self, tags, recipe):
         """Создание тегов."""
-        for tag in tags:
-            Tag.objects.create(recipe=recipe, tag=tag)
+        Tag.objects.bulk_create(
+            [Tag(
+                tags=Tag.objects.get(name=tag_data),
+                recipe=recipe,
+            ) for tag_data in tags]
+        )
+
 
     def create(self, validated_data):
         """
