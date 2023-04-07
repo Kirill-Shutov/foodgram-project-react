@@ -57,8 +57,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'errors': 'Рецепт уже добавлен.'},
                             status=status.HTTP_400_BAD_REQUEST)
         recipe = get_object_or_404(Recipe, id=pk)
-        model.objects.create(user=user, recipe=recipe)
         serializer = FavoriteSerializer(recipe)
+        serializer.save(user=user, recipe=recipe)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_from(self, model, user, pk):

@@ -1,4 +1,4 @@
-from django.core.validators import MinValueValidator, MaxValueValidator
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 from users.models import CustomUser
@@ -224,7 +224,25 @@ class ShoppingCart(models.Model):
             )
         ]
         ordering = ('recipe',)
-        
 
     def __str__(self):
         return f'{self.user} - {self.recipe}'
+
+
+class TagRecipe(models.Model):
+    """Описание модели свойства тега."""
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+    )
+    tags = models.ForeignKey(
+        Tag,
+        on_delete=models.CASCADE
+    )
+
+    class Meta:
+        verbose_name = 'Свойство тега'
+        verbose_name_plural = 'Свойства тега'
+
+    def __str__(self):
+        return f'{self.tags}'

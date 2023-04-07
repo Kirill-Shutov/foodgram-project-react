@@ -2,7 +2,7 @@ from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
 
 from recipes.models import (AmountIngredient, FavoriteRecipe, Ingredient,
-                            Recipe, ShoppingCart, Tag)
+                            Recipe, ShoppingCart, Tag, TagRecipe)
 from users.models import CustomUser
 from users.serializers import UserSerializer
 
@@ -201,17 +201,15 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     def create_tags(self, tags, recipe):
         """Создание тегов."""
-        Tag.objects.bulk_create(
-            [Tag(
+        TagRecipe.objects.bulk_create(
+            [TagRecipe(
                 tags=Tag.objects.get(name=tag_data),
                 recipe=recipe,
             ) for tag_data in tags]
         )
 
-
     def create(self, validated_data):
-        """
-        Создание рецепта.
+        """Создание рецепта.
         Доступно только авторизированному пользователю.
         """
         ingredients = validated_data.pop('ingredients')

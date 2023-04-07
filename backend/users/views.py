@@ -21,36 +21,11 @@ class UserViewSet(viewsets.ModelViewSet):
     permission_classes = [GetPost]
 
     @action(detail=False,
-            methods=['get',],
+            methods=['get'],
             permission_classes=[IsAuthenticated, ])
     def me(self, request):
         serializer = self.get_serializer(self.request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=False,
-            methods=['get',],
-            permission_classes=[IsAuthenticated, ])
-    def me(self, request):
-        data = UserSerializer(
-            request.user,
-            context={'request': request}).data
-        return Response(data, status=200)
-    
-    # @action(
-    #     detail=False,
-    #     methods=['get',],
-    #     permission_classes=[IsAuthenticated, ],
-    #     url_path='me',)
-    # def get_me(self, request):
-    #     data = UserSerializer(
-    #         request.user,
-    #         context={
-    #             'request': request
-    #         }
-    #     ).data
-    #     return Response(
-    #         data, status=200
-    #     )
 
     @action(detail=False,
             methods=['post'],
