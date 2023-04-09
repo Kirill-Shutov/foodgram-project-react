@@ -177,9 +177,9 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
                 raise serializers.ValidationError({
                    'amount': 'Количество ингредиента должно быть больше 0!'
                 })
-            if int(amount) > 30:
+            if int(amount) > 32000:
                 raise serializers.ValidationError({
-                   'amount': 'Количество не должно быть больше 30!'
+                   'amount': 'Количество не должно быть больше 32000!'
                 })
             identifier = ingredient.get('id')
             if identifier['id'] in ingredients_set:
