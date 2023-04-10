@@ -2,7 +2,7 @@
 
 ![example workflow](https://github.com/Kirill-Shutov/foodgram-project-react/actions/workflows/foodgram-project-react_workflow.yml/badge.svg)
 
-### Техническое описание проекта YaMDb. ###
+### Техническое описание проекта Foodgram. ###
 
 Проект **Foodgram** позволяет постить рецепты, подписываться на авторов, добавлять рецепты в избранное и скачивать списки продуктов.
 
