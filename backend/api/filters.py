@@ -1,13 +1,16 @@
 from django_filters import BooleanFilter, CharFilter, FilterSet
-
 from recipes.models import Recipe
 
 
 class RecipeFilter(FilterSet):
     tags = CharFilter(field_name='tags__slug', method='filter_tags')
-    is_favorited = BooleanFilter(method='get_favorite')
-    is_in_shopping_cart = BooleanFilter(
-        method='get_is_in_shopping_cart'
+    is_favorited = BooleanFilter(
+        method='get_favorite',
+        field_name='is_favorited'
+    )
+    is_in_shopping_cart = CharFilter(
+        method='get_is_in_shopping_cart',
+        field_name='is_in_shopping_cart'
     )
 
     class Meta:
@@ -23,11 +26,13 @@ class RecipeFilter(FilterSet):
     def get_favorite(self, queryset, name, value):
         user = self.request.user
         if value and not user.is_anonymous:
-            return queryset.filter(favorite__user=self.request.user)
-        return queryset
+            return Recipe.objects.filter(favorite_recipe__user=user)
+        return Recipe.objects.all()
+        #     return queryset.filter(favorite_recipe__user=self.request.user)
+        # return queryset
 
     def get_is_in_shopping_cart(self, queryset, name, value):
         user = self.request.user
         if value and not user.is_anonymous:
-            return queryset.filter(favorite_shops__user=self.request.user)
+            return queryset.filter(shopping_cart__user=self.request.user)
         return queryset

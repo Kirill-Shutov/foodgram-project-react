@@ -1,8 +1,7 @@
 from django.contrib.auth import get_user_model
 from djoser.serializers import UserCreateSerializer
-from rest_framework import serializers
-
 from recipes.models import Subscribe
+from rest_framework import serializers
 
 from .models import CustomUser
 

@@ -2,19 +2,19 @@ from django.db.models import F, Sum
 from django.http.response import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from recipes.models import (AmountIngredient, FavoriteRecipe, Ingredient,
+                            Recipe, ShoppingCart, Tag)
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import SAFE_METHODS, AllowAny, IsAuthenticated
 from rest_framework.response import Response
-
-from recipes.models import (AmountIngredient, FavoriteRecipe, Ingredient,
-                            Recipe, ShoppingCart, Tag)
 from users.permissions import CurrentUserOrAdmin, GetPost
 
 from .filters import RecipeFilter
 from .pagination import SixItemPagination
-from .serializers import (CreateRecipeSerializer, FavoriteSerializer,
-                          IngredientSerializer, RecipeSerializer,
+from .serializers import (CreateRecipeSerializer, FavoriteCreateSerializer,
+                          FavoriteSerializer, IngredientSerializer,
+                          RecipeSerializer, ShoppingCartCreateSerializer,
                           TagSerializer)
 
 
@@ -57,10 +57,21 @@ class RecipeViewSet(viewsets.ModelViewSet):
             return Response({'errors': 'Рецепт уже добавлен.'},
                             status=status.HTTP_400_BAD_REQUEST)
         recipe = get_object_or_404(Recipe, id=pk)
-        serializer = FavoriteSerializer(recipe)
-        serializer.create(user=user, recipe=recipe)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
+        if model == FavoriteRecipe:
+            favorite_serializer = FavoriteCreateSerializer(
+                data={"user": user.pk, "recipe": recipe.pk}
+                )
+            favorite_serializer.is_valid(raise_exception=True)
+            favorite_serializer.save()
+        elif model == ShoppingCart:
+            shopping_cart_serializer = ShoppingCartCreateSerializer(
+                data={"user": user.pk, "recipe": recipe.pk}
+                )
+            shopping_cart_serializer.is_valid(raise_exception=True)
+            shopping_cart_serializer.save()
+        serializer = FavoriteSerializer(
+            recipe, context={'request': self.request}
+            )
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def delete_from(self, model, user, pk):
@@ -136,15 +147,15 @@ class RecipeViewSet(viewsets.ModelViewSet):
         """Скачивание ингредиентов из списка покупок."""
         ingredients = (
             AmountIngredient.objects
-            .filter(recipe__favorite_shops__user=request.user)
-            .values('ingredient__name', 'ingredient__measurement_unit')
+            .filter(recipe__shopping_cart__user=request.user)
+            .values('ingredients__name', 'ingredients__measurement_unit')
             .annotate(amount=Sum(F('amount')))
             .order_by()
         )
         shop_list = []
         for ingredient in ingredients:
-            name = ingredient['ingredient__name']
-            measurement_unit = ingredient['ingredient__measurement_unit']
+            name = ingredient['ingredients__name']
+            measurement_unit = ingredient['ingredients__measurement_unit']
             amount = ingredient['amount']
             shop_list.append(
                 f'\n{name} - {amount} {measurement_unit}')
