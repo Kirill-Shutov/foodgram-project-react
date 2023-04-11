@@ -44,7 +44,16 @@ jobs:
         with:
           push: true
           context: ./backend/
-          tags: ${{ secrets.DOCKER_HUB_LOGIN }}/foodgramm:latest
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_LOGIN }}/backend:latest
+      - name: Push frontend
+        uses: docker/build-push-action@v2
+        with:
+          context: ./frontend/
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKER_HUB_LOGIN }}/frontend:latest
 
   deploy:
     runs-on: ubuntu-latest
