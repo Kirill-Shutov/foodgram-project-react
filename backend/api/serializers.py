@@ -7,6 +7,10 @@ from users.models import CustomUser
 from users.serializers import UserSerializer
 
 
+MIN_AMOUNT = 1
+MAX_AMOUNT = 32000
+
+
 class TagSerializer(serializers.ModelSerializer):
     """Сериализатор просмотра модели Tag."""
 
@@ -197,11 +201,11 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         ingredients_set = set()
         for ingredient in ingredients:
             amount = ingredient['amount']
-            if int(amount) < 1:
+            if int(amount) < MIN_AMOUNT:
                 raise serializers.ValidationError({
                    'amount': 'Количество ингредиента должно быть больше 0!'
                 })
-            if int(amount) > 32000:
+            if int(amount) > MAX_AMOUNT:
                 raise serializers.ValidationError({
                    'amount': 'Количество не должно быть больше 32000!'
                 })
