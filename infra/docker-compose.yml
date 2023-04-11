@@ -11,11 +11,14 @@ services:
 
   frontend:
     build: ../frontend
+    # image: kirill14/foodgramm:latest
+    restart: always
     volumes:
       - ../frontend:/app/result_build/
 
   backend:
     build: ../backend
+    # image: kirill14/foodgramm:latest
     volumes:
       - static_value:/app/static/
       - media_value:/app/media/
