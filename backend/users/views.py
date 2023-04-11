@@ -1,13 +1,12 @@
+from api.serializers import SubscribeSerializer
 from django.contrib.auth import get_user_model
 from djoser.serializers import SetPasswordSerializer
+from recipes.models import Subscribe
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-
-from api.serializers import SubscribeSerializer
-from recipes.models import Subscribe
 
 from .permissions import CurrentUserOrAdmin, GetPost
 from .serializers import UserSerializer

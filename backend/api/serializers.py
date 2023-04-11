@@ -1,11 +1,9 @@
 from drf_extra_fields.fields import Base64ImageField
-from rest_framework import serializers
-
 from recipes.models import (AmountIngredient, FavoriteRecipe, Ingredient,
                             Recipe, ShoppingCart, Tag, TagRecipe)
+from rest_framework import serializers
 from users.models import CustomUser
 from users.serializers import UserSerializer
-
 
 MIN_AMOUNT = 1
 MAX_AMOUNT = 32000
