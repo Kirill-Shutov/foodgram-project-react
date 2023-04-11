@@ -54,9 +54,10 @@ sudo docker-compose exec backend python manage.py collectstatic --no-input
 * Данные для проверки работы приложения: Суперпользователь
 
 ```
-email: alex@mail.com
-password: alex739422
+email: admin@admin.ru
+pass: 739422
 ```
+
 
 Документация:
 Документацию к проекту можно посмотреть на странице api/docs. Администрирование доступно на странице /admin.
@@ -66,11 +67,4 @@ password: alex739422
 Шутов Кирилл. Задание было выполнено с божьей помощью.
 
 Server address:
-51.250.89.101
-
-Superuser pass&email:
-
-```
-email: admin@admin.ru
-pass: 739422
-```
+158.160.37.246
