@@ -1,11 +1,16 @@
-from django_filters import BooleanFilter, CharFilter, FilterSet, ModelMultipleChoiceFilter
+from django_filters import (BooleanFilter, CharFilter, FilterSet,
+                            ModelMultipleChoiceFilter)
 
 from recipes.models import Recipe, Tag
 
 
 class RecipeFilter(FilterSet):
     # tags = CharFilter(field_name='tags__slug', method='filter_tags')
-    tags = ModelMultipleChoiceFilter(field_name='tags__slug', queryset=Tag.objects.all(), to_field_name ='slug')
+    tags = ModelMultipleChoiceFilter(
+        field_name='tags__slug',
+        queryset=Tag.objects.all(),
+        to_field_name ='slug'
+    )
     is_favorited = BooleanFilter(
         method='get_favorite',
         field_name='is_favorited'
