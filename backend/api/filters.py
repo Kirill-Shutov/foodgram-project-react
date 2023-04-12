@@ -1,10 +1,11 @@
-from django_filters import BooleanFilter, CharFilter, FilterSet
+from django_filters import BooleanFilter, CharFilter, FilterSet, ModelMultipleChoiceFilter
 
-from recipes.models import Recipe
+from recipes.models import Recipe, Tag
 
 
 class RecipeFilter(FilterSet):
-    tags = CharFilter(field_name='tags__slug', method='filter_tags')
+    # tags = CharFilter(field_name='tags__slug', method='filter_tags')
+    tags = ModelMultipleChoiceFilter(field_name='tags__slug', queryset=Tag.objects.all(), to_field_name ='slug')
     is_favorited = BooleanFilter(
         method='get_favorite',
         field_name='is_favorited'
@@ -18,11 +19,11 @@ class RecipeFilter(FilterSet):
         model = Recipe
         fields = ('is_favorited', 'is_in_shopping_cart', 'author', 'tags')
 
-    def filter_tags(self, queryset, slug, tags):
-        tags = self.request.query_params.getlist('tags')
-        return queryset.filter(
-            tags__slug__in=tags
-        ).distinct()
+    # def filter_tags(self, queryset, slug, tags):
+    #     tags = self.request.query_params.getlist('tags')
+    #     return queryset.filter(
+    #         tags__slug__in=tags
+    #     ).distinct()
 
     def get_favorite(self, queryset, name, value):
         user = self.request.user
