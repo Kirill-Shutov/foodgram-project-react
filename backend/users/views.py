@@ -59,30 +59,31 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True,
-            methods=['get', 'delete'],
+            methods=['get', 'delete', 'post'],
             permission_classes=[IsAuthenticated])
     def subscribe(self, request, pk):
         author = get_object_or_404(User, pk=pk)
         user = request.user
         subscribed = user.subscription_on.filter(author=author).exists()
         if request.method == 'GET':
-            if author != user and not subscribed:
-                Subscribe.objects.create(user=user, author=author)
-                serializer = UserSerializer(
-                    author,
-                    context={'request': request}
-                )
-                return Response(data=serializer.data,
-                                status=status.HTTP_201_CREATED)
+            try:
+                if author != user and not subscribed:
+                    Subscribe.objects.create(user=user, author=author)
+                    serializer = UserSerializer(
+                        author,
+                        context={'request': request}
+                    )
+                    return Response(data=serializer.data,
+                                    status=status.HTTP_201_CREATED)
+            except Exception as e:
+                data = {
+                    'error': str(e),
+                }
+                return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
             data = {
-                'errors': ('Вы уже подписаны на этого автора, '
+                'errors': ('Вы уже подписаны на автора, '
                            'или пытаетесь подписаться на себя')
             }
             return Response(data=data, status=status.HTTP_403_FORBIDDEN)
-        if not user.subscription_on.filter(author=author).exists():
-            data = {
-                'errors': ('Вы не подписаны на данного автора')
-            }
-            return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
         Subscribe.objects.filter(user=user, author=author).delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
