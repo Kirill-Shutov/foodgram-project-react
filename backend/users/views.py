@@ -61,8 +61,11 @@ class UserViewSet(viewsets.ModelViewSet):
     @action(detail=True,
             methods=['get', 'delete', 'post'],
             permission_classes=[IsAuthenticated])
-    def subscribe(self, request, pk):
-        author = get_object_or_404(User, pk=pk)
+    def subscribe(self, request, pk=None):
+        if pk:
+            author = get_object_or_404(User, pk=pk)
+        else:
+            author = get_object_or_404(User, pk=request.data.get('author_id'))
         user = request.user
         subscribed = user.subscription_on.filter(author=author).exists()
         if request.method == 'GET':
@@ -98,5 +101,7 @@ class UserViewSet(viewsets.ModelViewSet):
                         'или пытаетесь подписаться на себя')
             }
             return Response(data=data, status=status.HTTP_403_FORBIDDEN)
-        Subscribe.objects.filter(user=user, author=author).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        elif request.method == 'DELETE':
+            Subscribe.objects.filter(user=user, author=author).delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
