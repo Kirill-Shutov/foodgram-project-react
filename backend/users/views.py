@@ -58,9 +58,7 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True,
-            methods=['get', 'delete', 'post'],
-            permission_classes=[IsAuthenticated])
+    @action(detail=True, methods=['get', 'delete', 'post'], permission_classes=[IsAuthenticated])
     def subscribe(self, request, pk=None):
         if pk:
             author = get_object_or_404(User, pk=pk)
@@ -74,34 +72,25 @@ class UserViewSet(viewsets.ModelViewSet):
                     author,
                     context={'request': request}
                 )
-                return Response(data=serializer.data,
-                                status=status.HTTP_200_OK)
-            data = {
-                'errors': ('Вы уже подписаны на этого автора, '
-                           'или пытаетесь подписаться на себя'),
-            }
-            return Response(data=data, status=status.HTTP_403_FORBIDDEN)
+                return Response(data=serializer.data, status=status.HTTP_200_OK)
+            return Response(data={'errors': ('Вы уже подписаны на этого автора,'
+                                            ' или пытаетесь подписаться на себя')},
+                            status=status.HTTP_403_FORBIDDEN)
         elif request.method == 'POST':
             if author != user and not subscribed:
                 try:
                     Subscribe.objects.create(user=user, author=author)
                 except Exception as e:
-                    data = {
-                        'error': str(e),
-                    }
-                    return Response(data=data,
+                    return Response(data={'error': str(e)},
                                     status=status.HTTP_400_BAD_REQUEST)
                 serializer = UserSerializer(
                     author,
                     context={'request': request}
                 )
-                return Response(data=serializer.data,
-                                status=status.HTTP_201_CREATED)
-            data = {
-                'errors': ('Вы уже подписаны на этого автора, '
-                           'или пытаетесь подписаться на себя')
-            }
-            return Response(data=data, status=status.HTTP_403_FORBIDDEN)
+                return Response(data=serializer.data, status=status.HTTP_201_CREATED)
+            return Response(data={'errors': ('Вы уже подписаны на этого автора,'
+                                            ' или пытаетесь подписаться на себя')},
+                            status=status.HTTP_403_FORBIDDEN)
         elif request.method == 'DELETE':
             Subscribe.objects.filter(user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
