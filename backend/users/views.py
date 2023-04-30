@@ -84,16 +84,17 @@ class UserViewSet(viewsets.ModelViewSet):
                     data=serializer.data,
                     status=status.HTTP_200_OK
                 )
-            return Response(
-                data={
-                    'errors': (
-                        'Вы уже подписаны на этого автора, '
-                        'или пытаетесь подписаться на себя'
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
-        elif request.method == 'POST':
+            else:
+                return Response(
+                    data={
+                        'errors': (
+                            'Вы уже подписаны на этого автора, '
+                            'или пытаетесь подписаться на себя'
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        if request.method == 'POST':
             if author != user and not subscribed:
                 try:
                     Subscribe.objects.create(user=user, author=author)
@@ -109,15 +110,16 @@ class UserViewSet(viewsets.ModelViewSet):
                     data=serializer.data,
                     status=status.HTTP_201_CREATED
                 )
-            return Response(
-                data={
-                    'errors': (
-                        'Вы уже подписаны на этого автора, '
-                        'или пытаетесь подписаться на себя'
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
+            else:
+                return Response(
+                    data={
+                        'errors': (
+                            'Вы уже подписаны на этого автора, '
+                            'или пытаетесь подписаться на себя'
+                        )
+                    },
+                    status=status.HTTP_403_FORBIDDEN
+                )
         if request.method == 'DELETE':
             Subscribe.objects.filter(user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
