@@ -78,7 +78,7 @@ class UserViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_200_OK)
             data = {
                 'errors': ('Вы уже подписаны на этого автора, '
-                        'или пытаетесь подписаться на себя')
+                           'или пытаетесь подписаться на себя'),
             }
             return Response(data=data, status=status.HTTP_403_FORBIDDEN)
         elif request.method == 'POST':
@@ -89,7 +89,8 @@ class UserViewSet(viewsets.ModelViewSet):
                     data = {
                         'error': str(e),
                     }
-                    return Response(data=data, status=status.HTTP_400_BAD_REQUEST)
+                    return Response(data=data,
+                                    status=status.HTTP_400_BAD_REQUEST)
                 serializer = UserSerializer(
                     author,
                     context={'request': request}
@@ -98,7 +99,7 @@ class UserViewSet(viewsets.ModelViewSet):
                                 status=status.HTTP_201_CREATED)
             data = {
                 'errors': ('Вы уже подписаны на этого автора, '
-                        'или пытаетесь подписаться на себя')
+                           'или пытаетесь подписаться на себя')
             }
             return Response(data=data, status=status.HTTP_403_FORBIDDEN)
         elif request.method == 'DELETE':
