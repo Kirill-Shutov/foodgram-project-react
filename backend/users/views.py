@@ -118,7 +118,7 @@ class UserViewSet(viewsets.ModelViewSet):
                 },
                 status=status.HTTP_403_FORBIDDEN
             )
-        elif request.method == 'DELETE':
+        if request.method == 'DELETE':
             Subscribe.objects.filter(user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
