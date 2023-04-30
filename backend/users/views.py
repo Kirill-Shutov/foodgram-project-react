@@ -41,12 +41,17 @@ class UserViewSet(viewsets.ModelViewSet):
         self.request.user.save()
         return Response(data={}, status=status.HTTP_201_CREATED)
 
-    @action(detail=False,
-            methods=['get'],
-            permission_classes=[IsAuthenticated])
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated]
+    )
     def subscriptions(self, request):
-        queryset = User.objects.filter(
-            subscriber__user=request.user).order_by('id')
+        queryset = (
+            User.objects
+            .filter(subscriber__user=request.user)
+            .order_by('id')
+        )
         page = self.paginate_queryset(queryset)
         if page is not None:
             serializer = SubscribeSerializer(
@@ -58,7 +63,11 @@ class UserViewSet(viewsets.ModelViewSet):
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-    @action(detail=True, methods=['get', 'delete', 'post'], permission_classes=[IsAuthenticated])
+    @action(
+        detail=True,
+        methods=['get', 'delete', 'post'],
+        permission_classes=[IsAuthenticated]
+    )
     def subscribe(self, request, pk=None):
         if pk:
             author = get_object_or_404(User, pk=pk)
@@ -69,28 +78,46 @@ class UserViewSet(viewsets.ModelViewSet):
         if request.method == 'GET':
             if author != user and not subscribed:
                 serializer = UserSerializer(
-                    author,
-                    context={'request': request}
+                    author, context={'request': request}
                 )
-                return Response(data=serializer.data, status=status.HTTP_200_OK)
-            return Response(data={'errors': ('Вы уже подписаны на этого автора,'
-                                            ' или пытаетесь подписаться на себя')},
-                            status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    data=serializer.data,
+                    status=status.HTTP_200_OK
+                )
+            return Response(
+                data={
+                    'errors': (
+                        'Вы уже подписаны на этого автора, '
+                        'или пытаетесь подписаться на себя'
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         elif request.method == 'POST':
             if author != user and not subscribed:
                 try:
                     Subscribe.objects.create(user=user, author=author)
                 except Exception as e:
-                    return Response(data={'error': str(e)},
-                                    status=status.HTTP_400_BAD_REQUEST)
+                    return Response(
+                        data={'error': str(e)},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
                 serializer = UserSerializer(
-                    author,
-                    context={'request': request}
+                    author, context={'request': request}
                 )
-                return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-            return Response(data={'errors': ('Вы уже подписаны на этого автора,'
-                                            ' или пытаетесь подписаться на себя')},
-                            status=status.HTTP_403_FORBIDDEN)
+                return Response(
+                    data=serializer.data,
+                    status=status.HTTP_201_CREATED
+                )
+            return Response(
+                data={
+                    'errors': (
+                        'Вы уже подписаны на этого автора, '
+                        'или пытаетесь подписаться на себя'
+                    )
+                },
+                status=status.HTTP_403_FORBIDDEN
+            )
         elif request.method == 'DELETE':
             Subscribe.objects.filter(user=user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
