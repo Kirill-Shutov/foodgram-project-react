@@ -129,10 +129,11 @@ class SubscribeSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
     recipes_count = serializers.SerializerMethodField()
     is_subscribed = serializers.SerializerMethodField()
+    id = serializers.IntegerField()
 
     class Meta:
         fields = (
-            'username', 'email', 'first_name', 'last_name',
+            'id', 'username', 'email', 'first_name', 'last_name',
             'recipes', 'recipes_count', 'is_subscribed'
         )
         model = CustomUser

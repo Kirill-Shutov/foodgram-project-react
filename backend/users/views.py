@@ -1,5 +1,4 @@
 from django.contrib.auth import get_user_model
-from djoser.serializers import SetPasswordSerializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -9,7 +8,7 @@ from rest_framework.response import Response
 from api.serializers import SubscribeSerializer
 from recipes.models import Subscribe
 
-from .permissions import CurrentUserOrAdmin, GetPost
+from .permissions import GetPost
 from .serializers import UserSerializer
 
 User = get_user_model()
@@ -20,26 +19,14 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [GetPost]
 
-    @action(detail=False,
-            methods=['get'],
-            permission_classes=[IsAuthenticated, ])
+    @action(
+        detail=False,
+        methods=['get'],
+        permission_classes=[IsAuthenticated, ]
+    )
     def me(self, request):
-        serializer = self.get_serializer(self.request.user)
+        serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
-    @action(detail=False,
-            methods=['post'],
-            permission_classes=[CurrentUserOrAdmin])
-    def set_password(self, request, *args, **kwargs):
-        serializer = SetPasswordSerializer(
-            data=request.data,
-            context={'request': request}
-        )
-        serializer.is_valid(raise_exception=True)
-        new_password = serializer.validated_data['new_password']
-        self.request.user.set_password(new_password)
-        self.request.user.save()
-        return Response(data={}, status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,
@@ -59,7 +46,7 @@ class UserViewSet(viewsets.ModelViewSet):
             )
             return self.get_paginated_response(serializer.data)
         serializer = SubscribeSerializer(
-            page, many=True, context={'request': request}
+            queryset, many=True, context={'request': request}
         )
         return Response(serializer.data, status=status.HTTP_200_OK)
 
@@ -69,56 +56,52 @@ class UserViewSet(viewsets.ModelViewSet):
         permission_classes=[IsAuthenticated]
     )
     def subscribe(self, request, pk=None):
+        if not pk and 'author_id' not in request.data:
+            return Response(
+                data={'errors': 'Не указан параметр author_id'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
         if pk:
             author = get_object_or_404(User, pk=pk)
         else:
-            author = get_object_or_404(User, pk=request.data.get('author_id'))
-        user = request.user
-        subscribed = user.subscription_on.filter(author=author).exists()
+            author_id = request.data.get('author_id')
+            author = get_object_or_404(User, pk=author_id)
+
+        if author == request.user:
+            return Response(
+                data={'errors': 'Вы не можете подписаться на себя'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        subscribed = author.subscriber.filter(user=request.user).exists()
+
         if request.method == 'GET':
-            if author != user and not subscribed:
-                serializer = UserSerializer(
-                    author, context={'request': request}
-                )
+            if subscribed:
                 return Response(
-                    data=serializer.data,
-                    status=status.HTTP_200_OK
+                    data={'errors': 'Вы уже подписались на этого автора'},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-            return Response(
-                data={
-                    'errors': (
-                        'Вы уже подписаны на этого автора, '
-                        'или пытаетесь подписаться на себя'
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
+            serializer = UserSerializer(author, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_200_OK)
+
         if request.method == 'POST':
-            if author != user and not subscribed:
-                try:
-                    Subscribe.objects.create(user=user, author=author)
-                except Exception as e:
-                    return Response(
-                        data={'error': str(e)},
-                        status=status.HTTP_400_BAD_REQUEST
-                    )
-                serializer = UserSerializer(
-                    author, context={'request': request}
-                )
+            if subscribed:
                 return Response(
-                    data=serializer.data,
-                    status=status.HTTP_201_CREATED
+                    data={'errors': 'Вы уже подписались на этого автора'},
+                    status=status.HTTP_400_BAD_REQUEST
                 )
-            return Response(
-                data={
-                    'errors': (
-                        'Вы уже подписаны на этого автора, '
-                        'или пытаетесь подписаться на себя'
-                    )
-                },
-                status=status.HTTP_403_FORBIDDEN
-            )
+            Subscribe.objects.create(user=request.user, author=author)
+            serializer = UserSerializer(author, context={'request': request})
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
         if request.method == 'DELETE':
-            Subscribe.objects.filter(user=user, author=author).delete()
+            if not subscribed:
+                return Response(
+                    data={'errors': 'Вы не были подписаны на этого автора'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            Subscribe.objects.filter(user=request.user, author=author).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
+
         return Response(status=status.HTTP_400_BAD_REQUEST)
