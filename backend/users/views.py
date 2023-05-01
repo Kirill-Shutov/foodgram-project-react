@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from djoser.serializers import SetPasswordSerializer
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.generics import get_object_or_404
@@ -8,7 +9,7 @@ from rest_framework.response import Response
 from api.serializers import SubscribeSerializer
 from recipes.models import Subscribe
 
-from .permissions import GetPost
+from .permissions import CurrentUserOrAdmin, GetPost
 from .serializers import UserSerializer
 
 User = get_user_model()
@@ -27,6 +28,20 @@ class UserViewSet(viewsets.ModelViewSet):
     def me(self, request):
         serializer = self.get_serializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
+
+    @action(detail=False,
+            methods=['post'],
+            permission_classes=[CurrentUserOrAdmin])
+    def set_password(self, request, *args, **kwargs):
+        serializer = SetPasswordSerializer(
+            data=request.data,
+            context={'request': request}
+        )
+        serializer.is_valid(raise_exception=True)
+        new_password = serializer.validated_data['new_password']
+        self.request.user.set_password(new_password)
+        self.request.user.save()
+        return Response(data={}, status=status.HTTP_201_CREATED)
 
     @action(
         detail=False,
